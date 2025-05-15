@@ -1,76 +1,78 @@
-"""Implementation of base model class for use with RE Irrigation
+"""
+Implementation of base model class for use with RE Irrigation
 
 Written by Will Solow, 2025
 """
-import datetime
-import pickle
+import numpy as np
+from traitlets_pcse import Instance, HasTraits
 
-class Model():
+from richards_model.models.states_rates import ParamTemplate, StatesTemplate, RatesTemplate
+
+class BaseRichardsModel(HasTraits):
+
+    states = Instance(StatesTemplate)
+    rates = Instance(RatesTemplate)
+    params = Instance(ParamTemplate)
 
     def __init__(self):
         pass
 
-    def reset(self, day:datetime.date):
+    def reset(self):
         """
         Reset the model
         """
-        pass
+        raise NotImplementedError
 
-    def calc_rates(self, day, drv):
+    def calc_rates(self, IRRIG):
         """
         Calculate the rates of change for the state variables
         """
         raise NotImplementedError
         
-    def integrate(self, day, delt=1.0):
+    def integrate(self):
         """
         Integrate the state variables
         """
         raise NotImplementedError
     
-    def get_output(self, vars:list=None):
+    def run(self, IRRIG, steps:int=1):
         """
-        Return the output of the model
+        Advances the system state with given number of steps
         """
-        raise NotImplementedError
-    
-    def set_model_params(self, args:dict):
-        """
-        Set the model phenology parameters from dictionary
-        """
-        raise NotImplementedError
-    
-    def get_params(self):
-        """
-        Return the model parameters as a dictionary
-        """
-        return {k:getattr(self.params, k) for k in self.params.trait_names()}
-    
-    def save_model(self, path:str):
-        """
-        Save the model to pickle
-        """
-        with open(path, "wb") as fp:
-            pickle.dump(self.get_params(),fp)
-        fp.close()
+        steps_done = 0
+        while (steps_done < steps):
+            steps_done += 1
+            self._run(IRRIG)
 
-    def get_extra_states(self):
+    def _run(self, IRRIG):
         """
-        Get extra states not associated with states or rates classes
+        Make one time step of the simulation.
         """
-        raise NotImplementedError
-    
-    def set_extra_states(self, vars:dict):
-        """
-        Set extra states not associated with states or rate classes"""
-        for k,v in vars.items():
-            setattr(self, k, v)
 
+        self.calc_rates(IRRIG)
+        self.integrate()
+    
+    def get_output(self, ovars:list=None):
+        """
+        Return the Waterbalance as output
+        """
+        if ovars is None or ovars == []:
+            return np.array([self.states.WBS])
+        else:
+            output_vars = []
+            for i, v in enumerate(ovars):
+                if v in self.states.trait_names():
+                    output_vars.append(np.array([getattr(self.states, v)]).flatten())
+                elif v in self.rates.trait_names():
+                    output_vars.append(np.array([getattr(self.rates,v)]).flatten())
+    
+            return np.hstack(output_vars).flatten()
+    
     def get_state_rates(self, var: list=None):
         """
         Return the states and rates
         """
-        output_vars = [self.get_extra_states()]
+        output_vars = []
         if var is None:
             for s in self.states._find_valid_variables():
                 output_vars.append(getattr(self.states, s))
@@ -89,26 +91,26 @@ class Model():
         Set all states and rates
         """
 
+        if len(vars) != len(self.states._find_valid_variables()) + len(self.rates._find_valid_variables()):
+                raise ValueError("Length of vars does not match states and rates")
+        
         if isinstance(vars, dict):
-            self.set_extra_states(vars[0])
-            for k,v in vars[1].items():
+            for k,v in vars.items():
                 if k in self.states._find_valid_variables():
                     setattr(self.states, k, v)
                 elif k in self.rates._find_valid_variables():
                     setattr(self.rates, k, v)
 
         elif isinstance(vars, list):
-            self.set_extra_states(vars[0])
-
-            if len(vars[1]) != len(self.states._find_valid_variables()) + len(self.rates._find_valid_variables()):
-                raise ValueError("Length of vars does not match states and rates")
             for i, s in enumerate(self.states._find_valid_variables()):
-                setattr(self.states, s, vars[1][i])
+                setattr(self.states, s, vars[0][i])
             for j, r in enumerate(self.rates._find_valid_variables()):
-                setattr(self.rates, r, vars[1][j + len(self.states._find_valid_variables())])
+                setattr(self.rates, r, vars[0][j + len(self.states._find_valid_variables())])
 
     def get_state_rates_names(self):
-        """Get names of states and rates"""
+        """
+        Get names of states and rates
+        """
         output_vars = []
         for s in self.states._find_valid_variables():
             output_vars.append(s)

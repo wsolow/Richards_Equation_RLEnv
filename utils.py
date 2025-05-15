@@ -23,9 +23,22 @@ class EnvConfig:
     num_steps: Optional[int] = None
     """Irrigation Interval"""
     irrig_interval: Optional[int] = None
+    """Observable output Variables"""
+    output_vars: Optional[list] = None
 
 @dataclass
 class PPO:
+    """If the action space is continuous"""
+    continuous_action: Optional[bool] = True
+    """Range of discrete action space"""
+    discrete_action_range: Optional[list] =  None
+    """Number of discrete actions"""
+    num_discrete_actions: Optional[int] = None
+    """Recurrent PPO"""
+    recurrent: Optional[bool] = False
+    
+    """Logging Frequency in epochs"""
+    log_frequency: Optional[int] = 1
     """total timesteps of the experiments"""
     total_timesteps: Optional[int] = 500000
     """the learning rate of the optimizer"""
@@ -60,6 +73,8 @@ class PPO:
     target_kl: Optional[float] = None
     """Deterministic torch"""
     torch_deterministic: Optional[bool] = True
+    """If to use GPU or not"""
+    cuda: Optional[bool] = True
     
     """the batch size (computed in runtime)"""
     batch_size: Optional[int] = 0

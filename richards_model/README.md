@@ -1,7 +1,6 @@
 # Project Title
 
-This is the project that provides a gym wrapper and support for running differentiable
-models through PyTorch with parameter calibration and resets
+This package provides the Richards Equation in a RL compatible environment
 
 # Use this package
-git clone git@github.com:wsolow/richards_model.git
+git clone git@github.com:wsolow/Richards_Equation_RLEnv.git

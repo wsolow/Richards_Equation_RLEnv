@@ -3,9 +3,10 @@ Trainer for PPO
 """
 import argparse
 import utils
-import numpy as np
 
-from richards_model.envs.richards_env import RichardsEquationEnv, RichardsSyncVectorEnv
+from train_algs.PPO_Continuous import PPO_Continuous
+from train_algs.PPO_Reccur import PPO_Reccur
+from train_algs.PPO_Discrete import PPO_Discrete
 
 def main(): 
     #np.set_printoptions(precision=3, suppress=True)
@@ -15,15 +16,18 @@ def main():
     args = parser.parse_args()
 
     config = utils.load_config(args)
-    num_envs = 1
     
-    env = RichardsSyncVectorEnv(config=config.EnvConfig, num_envs=num_envs)
+    if config.PPO.continuous_action:
+        if config.PPO.recurrent:
+            trainer = PPO_Reccur(config)
+        else:
+            trainer = PPO_Continuous(config)
+    else:
+        trainer = PPO_Discrete(config)
+
+
+    trainer.train()
     
-    term = [False] * num_envs
-    obs, _ = env.reset()
-    while not np.all(term) :
-        obs, _, term, _, _ = env.step([0.05]*num_envs)
-        print(obs)
 
 if __name__ == "__main__":
     main()

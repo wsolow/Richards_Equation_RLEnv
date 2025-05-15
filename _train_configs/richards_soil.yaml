@@ -1,10 +1,11 @@
 # Model Configuration
 EnvConfig:
     model_config_fpath: _configs_models/
-    model: FixedPSI
+    model: FixedPsi # FixedPsi, FreeDrainage, ZeroFlux
     model_parameters: re_irrigation:1 # {filename}:{set}
     num_steps: 40
     irrig_interval: 1
+    output_vars: ["WBS", "DV"]
 
 # Log configuration
 log_path: /_runs/test/
@@ -12,14 +13,20 @@ run_name: irrigation
 seed: 0
 
 PPO:
+    continuous_action: False
+    discrete_action_range: [0, 0.1]
+    num_discrete_actions: 10
+    recurrent: True
+
     total_timesteps: 1000000
     learning_rate: 2.5e-4
+    log_frequency: 1
     num_envs: 12
     num_steps: 256
     anneal_lr: True
     gamma: 0.99
     gae_lambda: 0.95
-    num_minibatches: 16
+    num_minibatches: 4
     update_epochs: 16
     norm_adv: True
     clip_coef: 0.2
@@ -32,4 +39,5 @@ PPO:
     minibatch_size: 0
     num_iterations: 0
     torch_deterministic: True
+    cuda: True
 

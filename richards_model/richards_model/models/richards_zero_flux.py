@@ -8,11 +8,11 @@ from scipy.integrate import ode
 
 from richards_model.models.states_rates import NDArray
 from richards_model.models.states_rates import ParamTemplate, StatesTemplate, RatesTemplate
-from richards_model.models.base_model import Model
+from richards_model.models.base_model import BaseRichardsModel
 from traitlets_pcse import Float
        
 EPS = 1e-12
-class RE_ZeroFlux(Model):
+class RE_ZeroFlux(BaseRichardsModel):
     """Implements Richard's Equation Irrigation model
     """
 
@@ -103,7 +103,7 @@ class RE_ZeroFlux(Model):
 
         self.solver.set_initial_value(s.DV.copy(), 0)
 
-        ode_init_vals = (r.BCT[0], r.BCB[0], s.DV)
+        ode_init_vals = (r.BCT, r.BCB, s.DV)
         self.solver.set_f_params(*ode_init_vals)
             
         self.solver.integrate(p.TS)
@@ -112,12 +112,6 @@ class RE_ZeroFlux(Model):
         s.PSI = s.DV[1:-1]
         s.THETA = np.reshape(self.theta_func(s.PSI.reshape(-1)), s.PSI.shape)
         s.WBS = np.sum(s.THETA * p.SPACE_S)
-
-    def get_output(self):
-        """
-        Return the Waterbalance as output
-        """
-        return self.states.WBS
 
     def reset(self):
         """
@@ -142,7 +136,7 @@ class RE_ZeroFlux(Model):
         THETA = np.reshape(self.theta_func(INIT_PSI.reshape(-1)), INIT_PSI.shape)
         WBS = np.sum(THETA * p.SPACE_S)
 
-        self.states = self.StateVariables(PSI_0=INIT_PSI, THETA=THETA, PSI=INIT_PSI, WBS=WBS,DV=DV)
+        self.states = self.StateVariables(PSI_0=INIT_PSI, THETA=THETA, PSI=INIT_PSI, WBS=WBS,DV=DV, QT=DV[0], QB=DV[-1])
         self.rates = self.RateVariables()
 
         self.solver = ode(self.ode_func_blockcentered)

@@ -10,36 +10,48 @@ Written by Will Solow, 2025
 import numpy as np
 
 from richards_model.envs.util import param_loader
-from richards_model.richards_model.models.richards_fixed_psi import RE_FixedPSI
-from richards_model.richards_model.models.richards_free_drainage import RE_FreeDrain
-from richards_model.richards_model.models.richards_zero_flux import RE_ZeroFlux
+from richards_model.models.richards_fixed_psi import RE_FixedPSI
+from richards_model.models.richards_free_drainage import RE_FreeDrain
+from richards_model.models.richards_zero_flux import RE_ZeroFlux
 
 class RichardsEquationEnv():
 
-    def __init__(self, config:dict=None):
+    def __init__(self, config:dict=None, continuous_action:bool=True, num_discrete_actions:int=1, discrete_action_range:list=None):
 
         self.config = config
 
         self.num_steps = config.num_steps
         self.curr_step = 0
         self.irrig_interval = config.irrig_interval
+        self.output_vars = config.output_vars
+        self.continuous_action = continuous_action
+        self.num_discrete_actions = num_discrete_actions
+        self.discrete_actions = np.arange(discrete_action_range[0], discrete_action_range[1], discrete_action_range[1]/num_discrete_actions)
 
-        if config.model == "FixedPSI":
+        if config.model == "FixedPsi":
             self.model = RE_FixedPSI(param_loader(self.config))
-        elif config.model == "FreeDrainage":
+        elif config.model == "FreeDrain":
             self.model = RE_FreeDrain(param_loader(self.config))
         elif config.model == "ZeroFlux":
-            self.model == RE_ZeroFlux(param_loader(self.config))
+            self.model = RE_ZeroFlux(param_loader(self.config))
         else:
-            raise NotImplementedError("Freely Draining and Zero Flux models not yet implemented")
+            raise NotImplementedError("Unrecognized model type `{config.model}`. Available choices are [FixedPsi, FreeDrain, ZeroFlux]")
+        
+        self.observation_space = np.empty(shape=self.model.get_output(self.output_vars).shape)
+        self.action_space = np.empty(shape=(1 if self.continuous_action else self.num_discrete_actions,))
 
-    def step(self, irrig_action):
+
+    def step(self, action):
         """
         Standard RL interface function to pass an action to the model and recieve
         reward and next observation
         """
+        # Interpret action passed by Agent
+        irrig_action = float(action) if self.continuous_action else self.discrete_actions[int(action)]
+        
 
-        next_obs = self.run(irrig_action, steps=self.irrig_interval) # Run model for number of steps
+        self.model.run(irrig_action, steps=self.irrig_interval) # Run model for number of steps
+        next_obs = self.model.get_output(self.output_vars)
         self.curr_step += self.irrig_interval
 
         reward = self.compute_reward(next_obs, irrig_action) # Reward should generally but a function of the observation/action
@@ -63,32 +75,11 @@ class RichardsEquationEnv():
         """
         self.model.reset()
 
-        return self.model.get_output(), {}
+        return self.model.get_output(self.output_vars), {}
 
-
-    def run(self, IRRIG, steps:int=1):
-        """
-        Advances the system state with given number of steps
-        """
-        steps_done = 0
-        while (steps_done < steps):
-            steps_done += 1
-            self._run(IRRIG)
-
-        return self.model.get_output()
-    
-    def _run(self, IRRIG):
-        """
-        Make one time step of the simulation.
-        """
-
-        self.model.calc_rates(IRRIG)
-        self.model.integrate()
-    
-   
 class RichardsSyncVectorEnv():
 
-    def __init__(self, config=None, num_envs:int=1):
+    def __init__(self, config=None, num_envs:int=1, continuous_action:bool=True, num_discrete_actions:int=1, discrete_action_range:list=None):
         """
         Vectorized environment that serially runs multiple environments.
         """
@@ -97,9 +88,10 @@ class RichardsSyncVectorEnv():
         self.autoreset_mode = None
         self.config = config
 
-        self.envs = [RichardsEquationEnv(config) for _ in range(num_envs)]
-        self.single_observation_space = np.empty(shape=(1,))
-        self.single_action_space = np.empty(shape=(1,))
+        self.envs = [RichardsEquationEnv(config=config, continuous_action=continuous_action, \
+                                         num_discrete_actions=num_discrete_actions, discrete_action_range=discrete_action_range) for _ in range(num_envs)]
+        self.single_observation_space = np.empty(shape=self.envs[0].observation_space.shape)
+        self.single_action_space = np.empty(shape=(self.envs[0].action_space.shape))
 
         # Initialise attributes used in `step` and `reset`
         self._env_obs = [None for _ in range(self.num_envs)]
@@ -123,7 +115,6 @@ class RichardsSyncVectorEnv():
         infos = {}
         for i, env in enumerate(self.envs):
             self._env_obs[i], env_info = env.reset()
-
         # Concatenate the observations
         self._observations = np.stack(self._env_obs)
         return self._observations, infos

@@ -13,19 +13,16 @@ authors = [
 maintainers = [
   {name = "Will Solow", email = "soloww@oregonstate.edu"}
 ]
-description = "Model Engine for differentiable models"
+description = "Environment for Richards Equations"
 readme = "README.md"
 license = {file = "LICENSE.md"}
-keywords = ["model calibration", "engine"]
+keywords = ["RL"]
 classifiers = [
   "Development Status :: 4 - Beta",
   "Programming Language :: Python"
 ]
 
 [project.urls]
-Homepage = "https://github.com/wsolow/richards_model"
-Documentation = "https://github.com/wsolow/richards_model"
-Repository = "https://github.com/wsolow/richards_model"
-"Bug Tracker" = "https://github.com/wsolow/richards_model"
-Changelog = "https://github.com/wsolow/richards_model"
+Homepage = "https://github.com/wsolow/Richards_Equation_RLEnv"
+
 
