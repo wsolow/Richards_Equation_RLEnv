@@ -3,8 +3,8 @@ EnvConfig:
     model_config_fpath: _configs_models/
     model: FixedPSI
     model_parameters: re_irrigation:1 # {filename}:{set}
-    num_steps: 400
-    irrig_interval: 5
+    num_steps: 40
+    irrig_interval: 1
 
 # Log configuration
 log_path: /_runs/test/

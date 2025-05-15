@@ -10,7 +10,9 @@ Written by Will Solow, 2025
 import numpy as np
 
 from richards_model.envs.util import param_loader
-from richards_model.models.re_irrigation import RE_FixedPSI
+from richards_model.richards_model.models.richards_fixed_psi import RE_FixedPSI
+from richards_model.richards_model.models.richards_free_drainage import RE_FreeDrain
+from richards_model.richards_model.models.richards_zero_flux import RE_ZeroFlux
 
 class RichardsEquationEnv():
 
@@ -24,6 +26,10 @@ class RichardsEquationEnv():
 
         if config.model == "FixedPSI":
             self.model = RE_FixedPSI(param_loader(self.config))
+        elif config.model == "FreeDrainage":
+            self.model = RE_FreeDrain(param_loader(self.config))
+        elif config.model == "ZeroFlux":
+            self.model == RE_ZeroFlux(param_loader(self.config))
         else:
             raise NotImplementedError("Freely Draining and Zero Flux models not yet implemented")
 
@@ -36,12 +42,19 @@ class RichardsEquationEnv():
         next_obs = self.run(irrig_action, steps=self.irrig_interval) # Run model for number of steps
         self.curr_step += self.irrig_interval
 
-        reward = 0 # Easiest to have a configurable reward function via configuration file based on observations
+        reward = self.compute_reward(next_obs, irrig_action) # Reward should generally but a function of the observation/action
 
-        trunc = False
-        term = self.curr_step > self.num_steps
+        trunc = False # For interface purposes, no need otherwise
+        term = self.curr_step > self.num_steps # 
 
         return next_obs, reward, term, trunc, {} # Standard output for RL itnerface
+    
+    def compute_reward(self, obs, action):
+        """
+        Reward function for RL algorithm
+        """
+
+        return 0
 
     def reset(self):
         """

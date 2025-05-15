@@ -12,7 +12,7 @@ from richards_model.models.base_model import Model
 from traitlets_pcse import Float
        
 EPS = 1e-12
-class RE_FixedPSI(Model):
+class RE_FreeDrain(Model):
     """Implements Richard's Equation Irrigation model
     """
 
@@ -31,7 +31,6 @@ class RE_FixedPSI(Model):
         NETA       = Float(-99.)  # Neta parameter
         MATRIC_POT = Float(-99.)  # Initial PSI
 
-        LBCOND     = Float(-99.)  # Lower bound condition (0,1,2)
         INITCOND   = Float(-99.)  # initial bound condition (0,1)
 
         SPACE_S    = Float(-99.)  # Space step
@@ -39,15 +38,17 @@ class RE_FixedPSI(Model):
         TS         = Float(-99.)  # Time step
 
     class RateVariables(RatesTemplate):
-        BCT = NDArray(-99.) # Irrigation pulses
-        BCB = NDArray(-99.) # BC_T
+        BCT = Float(-99.) # Irrigation pulses
+        BCB = Float(-99.) # Bottom Drainage
 
     class StateVariables(StatesTemplate):
         PSI_0   = NDArray(-99.) # Initial Water balance
         PSI     = NDArray(-99.) # Current water balance
         THETA   = NDArray(-99.) # Theta values
-        WBS     = NDArray(-99.) # Water balance S
         DV      = NDArray(-99.) # Soil water levels
+        WBS     = Float(-99.)   # Total water balance in soil
+        QT      = Float(-99.)   # Top soil water content
+        QB      = Float(-99.)   # Bottom soil water content
       
     def __init__(self, parvalues:dict):
 
@@ -77,7 +78,7 @@ class RE_FixedPSI(Model):
         THETA = np.reshape(self.theta_func(INIT_PSI.reshape(-1)), INIT_PSI.shape)
         WBS = np.sum(THETA * p.SPACE_S)
 
-        self.states = self.StateVariables(PSI_0=INIT_PSI, THETA=THETA, PSI=INIT_PSI, WBS=WBS,DV=DV)
+        self.states = self.StateVariables(PSI_0=INIT_PSI, THETA=THETA, PSI=INIT_PSI, WBS=WBS,DV=DV, QT=DV[0], QB=DV[-1])
         self.rates = self.RateVariables()
 
         self.solver = ode(self.ode_func_blockcentered)
@@ -146,7 +147,7 @@ class RE_FixedPSI(Model):
 
         self.solver = ode(self.ode_func_blockcentered)
         self.solver.set_integrator('vode',method='BDF',uband=1,lband=1)
-        
+
     def theta_func(self, psi):
         """
         Compute the theta function
@@ -157,7 +158,7 @@ class RE_FixedPSI(Model):
         Se[ psi>0. ] = 1.0
 
         return p.THETA_R + (p.THETA_S - p.THETA_R) * Se
-    
+
     def c_func(self, psi):
         """
         Compute the C Function
@@ -192,15 +193,12 @@ class RE_FixedPSI(Model):
         """
         Compute boundary fluxes
         """
-        p = self.params
+
         # Upper BC: Type 2 specified infiltration flux
         qT = BC_T
 
         # Lower BC: Type 1 specified pressure head
-        psiB = BC_B
-        Kout = (self.k_func(np.array([psiBn])) + self.k_func(np.array([psiB]))) / 2.
-
-        qB = -Kout[0] * ( ( psiB - psiBn ) / ( p.SPACE_S / 2 ) - 1. )
+        qB = self.k_func(np.array([psiBn]))
 
         return qT, qB
     

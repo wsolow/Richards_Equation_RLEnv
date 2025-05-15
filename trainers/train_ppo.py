@@ -22,7 +22,7 @@ def main():
     term = [False] * num_envs
     obs, _ = env.reset()
     while not np.all(term) :
-        obs, _, term, _, _ = env.step([0]*num_envs)
+        obs, _, term, _, _ = env.step([0.05]*num_envs)
         print(obs)
 
 if __name__ == "__main__":

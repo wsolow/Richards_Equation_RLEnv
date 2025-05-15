@@ -24,6 +24,10 @@ ModelParameters:
         - 0.5
         - alpha parameter
         - ['1.m']
+      K_S: 
+        - 0.2
+        - k s parameter
+        - ['m.d']
       N:
         - 1.8
         - n parameter
@@ -32,10 +36,6 @@ ModelParameters:
         - .4444444
         - M parameter (1-1/n)
         - ['-']
-      K_S: 
-        - 0.2
-        - k s parameter
-        - ['m.d']
       NETA:
         - 0.5
         - Neta parameter
@@ -49,6 +49,10 @@ ModelParameters:
         - Lower/Initial Matric Potential
         - ['m']
 
+      TS:
+        - 0.25
+        - Time step 
+        - ['d']
       SD:
         - 4.0
         - Soil Depth
@@ -57,16 +61,11 @@ ModelParameters:
         - 0.1
         - Space Step
         - ['m']
-      TS:
-        - 0.25
-        - Time step 
-        - ['d']
       INITCOND:
         - 0 # 0,1
         - Initial condition (0,1) corresponding to Hydrostatic or Fixed Psi
         - ['-']
-
-      
+        
   Sets:
     "1":
       <<: *re_irrigation
