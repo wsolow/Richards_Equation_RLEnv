@@ -1,9 +1,11 @@
-# Project Title
+# RL Richards Equation Environment
 
 This package provides the Richards Equation in a RL compatible environment
 
 # Use this package
-git clone git@github.com:wsolow/Richards_Equation_RLEnv.git
+Clone the repository: 
+
+`git clone git@github.com:wsolow/Richards_Equation_RLEnv.git`
 
 Create conda virtual environment
 
