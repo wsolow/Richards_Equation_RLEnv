@@ -1,0 +1,35 @@
+# Model Configuration
+EnvConfig:
+    model_config_fpath: _configs_models/
+    model: FixedPSI
+    model_parameters: re_irrigation:1 # {filename}:{set}
+    num_steps: 400
+    irrig_interval: 5
+
+# Log configuration
+log_path: /_runs/test/
+run_name: irrigation
+seed: 0
+
+PPO:
+    total_timesteps: 1000000
+    learning_rate: 2.5e-4
+    num_envs: 12
+    num_steps: 256
+    anneal_lr: True
+    gamma: 0.99
+    gae_lambda: 0.95
+    num_minibatches: 16
+    update_epochs: 16
+    norm_adv: True
+    clip_coef: 0.2
+    clip_vloss: True
+    ent_coef: 0.01
+    vf_coef: 0.5
+    max_grad_norm: 0.5
+    target_kl: 
+    batch_size: 0
+    minibatch_size: 0
+    num_iterations: 0
+    torch_deterministic: True
+

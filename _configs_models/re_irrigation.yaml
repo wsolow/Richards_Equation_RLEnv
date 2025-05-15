@@ -1,0 +1,72 @@
+ModelParameters:
+  EcoTypes:
+    re_irrigation: &re_irrigation
+      #
+      # Irrigation
+      # 
+      PSI_MIN:
+        - -10.
+        - Water balance minimum
+        - ['m']
+      PSI_MAX:
+        - 0.
+        - Water balance maximum
+        - ['m']
+      THETA_R:
+        - 0.1
+        - theta r parameter
+        - ['-']
+      THETA_S:
+        - 0.4
+        - theta s parameter
+        - ['m']
+      ALPHA:
+        - 0.5
+        - alpha parameter
+        - ['1.m']
+      N:
+        - 1.8
+        - n parameter
+        - ['-']
+      M:
+        - .4444444
+        - M parameter (1-1/n)
+        - ['-']
+      K_S: 
+        - 0.2
+        - k s parameter
+        - ['m.d']
+      NETA:
+        - 0.5
+        - Neta parameter
+        - ['-']
+      SS:
+        - 0.000001
+        - Space Step in Soil
+        - ['m']
+      MATRIC_POT:
+        - 0.
+        - Lower/Initial Matric Potential
+        - ['m']
+
+      SD:
+        - 4.0
+        - Soil Depth
+        - ['m']
+      SPACE_S:
+        - 0.1
+        - Space Step
+        - ['m']
+      TS:
+        - 0.25
+        - Time step 
+        - ['d']
+      INITCOND:
+        - 0 # 0,1
+        - Initial condition (0,1) corresponding to Hydrostatic or Fixed Psi
+        - ['-']
+
+      
+  Sets:
+    "1":
+      <<: *re_irrigation
